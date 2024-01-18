@@ -1,0 +1,4 @@
+sources:
+  "5.1.2":
+    url: "https://github.com/NVIDIA-Omniverse/PhysX/archive/refs/tags/105.0-physx-5.2.1.zip"
+    sha256: "dc52e711c06655864860cb12c0b5dded14318c94d145a5ea80808c7f5ca803e5"
