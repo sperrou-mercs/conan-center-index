@@ -15,6 +15,7 @@ class AlembicConan(ConanFile):
     homepage = "http://www.alembic.io"
     description = "Open framework for storing and sharing scene data."
     topics = ("3d", "scene", "geometry", "graphics")
+    revision_mode = "scm"
 
     package_type = "library"
     settings = "os", "arch", "compiler", "build_type"
