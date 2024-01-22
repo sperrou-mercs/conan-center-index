@@ -18,6 +18,7 @@ class LcmsConan(ConanFile):
     license = "MIT"
     homepage = "https://github.com/mm2/Little-CMS"
     topics = ("littlecms", "little-cms", "cmm", "icc", "cmm-engine", "color-management-engine")
+    revision_mode = "scm"
     package_type = "library"
     settings = "os", "arch", "compiler", "build_type"
     options = {
@@ -46,7 +47,7 @@ class LcmsConan(ConanFile):
         basic_layout(self, src_folder="src")
 
     def build_requirements(self):
-        self.tool_requires("meson/1.2.1")
+        self.tool_requires("meson/[~1.2.1]")
 
     def source(self):
         get(self, **self.conan_data["sources"][self.version], strip_root=True)

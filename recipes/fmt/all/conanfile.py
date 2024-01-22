@@ -16,6 +16,7 @@ class FmtConan(ConanFile):
     description = "A safe and fast alternative to printf and IOStreams."
     topics = ("format", "iostream", "printf")
     url = "https://github.com/conan-io/conan-center-index"
+    revision_mode = "scm"
     license = "MIT"
     package_type = "library"
     settings = "os", "arch", "compiler", "build_type"

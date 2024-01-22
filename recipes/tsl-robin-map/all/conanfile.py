@@ -15,6 +15,7 @@ class TslRobinMapConan(ConanFile):
     homepage = "https://github.com/Tessil/robin-map"
     url = "https://github.com/conan-io/conan-center-index"
     package_type = "header-library"
+    revision_mode = "scm"
     settings = "os", "arch", "compiler", "build_type"
     no_copy_source = True
 

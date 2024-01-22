@@ -23,6 +23,7 @@ class Libxml2Conan(ConanFile):
     topics = "xml", "parser", "validation"
     homepage = "https://gitlab.gnome.org/GNOME/libxml2/-/wikis/"
     license = "MIT"
+    revision_mode = "scm"
     settings = "os", "arch", "compiler", "build_type"
     # from ./configure and ./win32/configure.js
     default_options = {
@@ -35,7 +36,7 @@ class Libxml2Conan(ConanFile):
         "ftp": True,
         "http": True,
         "html": True,
-        "iconv": True,
+        "iconv": False,
         "icu": False,
         "iso8859x": True,
         "legacy": True,

@@ -17,6 +17,7 @@ class CMakeConan(ConanFile):
     homepage = "https://github.com/Kitware/CMake"
     license = "BSD-3-Clause"
     settings = "os", "arch"
+    revision_mode = "scm"
 
     def validate(self):
         if self.settings.arch not in ["x86_64", "armv8"]:

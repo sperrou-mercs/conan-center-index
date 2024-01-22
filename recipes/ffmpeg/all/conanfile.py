@@ -28,6 +28,7 @@ class FFMpegConan(ConanFile):
     homepage = "https://ffmpeg.org"
     topics = ("multimedia", "audio", "video", "encoder", "decoder", "encoding", "decoding",
               "transcoding", "multiplexer", "demultiplexer", "streaming")
+    revision_mode = "scm"
     package_type = "library"
     settings = "os", "arch", "compiler", "build_type"
     options = {
@@ -106,6 +107,8 @@ class FFMpegConan(ConanFile):
         "disable_all_filters": [True, False],
         "disable_filters": [None, "ANY"],
         "enable_filters": [None, "ANY"],
+        "gpl": [True, False],
+        "nonfree": [True, False],
     }
     default_options = {
         "shared": False,
@@ -115,39 +118,39 @@ class FFMpegConan(ConanFile):
         "avformat": True,
         "swresample": True,
         "swscale": True,
-        "postproc": True,
+        "postproc": False,
         "avfilter": True,
         "with_asm": True,
         "with_zlib": True,
         "with_bzip2": True,
         "with_lzma": True,
-        "with_libiconv": True,
+        "with_libiconv": False,
         "with_freetype": True,
-        "with_openjpeg": True,
-        "with_openh264": True,
-        "with_opus": True,
-        "with_vorbis": True,
+        "with_openjpeg": False,
+        "with_openh264": False,
+        "with_opus": False,
+        "with_vorbis": False,
         "with_zeromq": False,
         "with_sdl": False,
-        "with_libx264": True,
-        "with_libx265": True,
-        "with_libvpx": True,
-        "with_libmp3lame": True,
-        "with_libfdk_aac": True,
-        "with_libwebp": True,
+        "with_libx264": False,
+        "with_libx265": False,
+        "with_libvpx": False,
+        "with_libmp3lame": False,
+        "with_libfdk_aac": False,
+        "with_libwebp": False,
         "with_ssl": "openssl",
         "with_libalsa": True,
-        "with_pulse": True,
-        "with_vaapi": True,
-        "with_vdpau": True,
+        "with_pulse": False,
+        "with_vaapi": False,
+        "with_vdpau": False,
         "with_vulkan": False,
         "with_xcb": True,
         "with_appkit": True,
         "with_avfoundation": True,
         "with_coreimage": True,
-        "with_audiotoolbox": True,
-        "with_videotoolbox": True,
-        "with_programs": True,
+        "with_audiotoolbox": False,
+        "with_videotoolbox": False,
+        "with_programs": False,
         "disable_everything": False,
         "disable_all_encoders": False,
         "disable_encoders": None,
@@ -183,6 +186,8 @@ class FFMpegConan(ConanFile):
         "disable_all_filters": False,
         "disable_filters": None,
         "enable_filters": None,
+        "gpl": True,
+        "nonfree": True,
     }
 
     @property
@@ -265,7 +270,7 @@ class FFMpegConan(ConanFile):
         if self.options.with_libiconv:
             self.requires("libiconv/1.17")
         if self.options.with_freetype:
-            self.requires("freetype/2.13.0")
+            self.requires("freetype/[~2.13.0]")
         if self.options.with_openjpeg:
             self.requires("openjpeg/2.5.0")
         if self.options.with_openh264:
@@ -487,10 +492,10 @@ class FFMpegConan(ConanFile):
             "--disable-cuda",  # FIXME: CUDA support
             "--disable-cuvid",  # FIXME: CUVID support
             # Licenses
-            opt_enable_disable("nonfree", self.options.with_libfdk_aac or (self.options.with_ssl and (
-                self.options.with_libx264 or self.options.with_libx265 or self.options.postproc))),
+            opt_enable_disable("nonfree", self.options.nonfree and (self.options.with_libfdk_aac or (self.options.with_ssl and (
+                self.options.with_libx264 or self.options.with_libx265 or self.options.postproc)))),
             opt_enable_disable(
-                "gpl", self.options.with_libx264 or self.options.with_libx265 or self.options.postproc)
+                "gpl", self.options.gpl and (self.options.with_libx264 or self.options.with_libx265 or self.options.postproc))
         ]
 
         # Individual Component Options

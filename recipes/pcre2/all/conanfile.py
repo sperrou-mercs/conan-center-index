@@ -17,6 +17,7 @@ class PCRE2Conan(ConanFile):
     topics = ("regex", "regexp", "perl")
     license = "BSD-3-Clause"
     package_type = "library"
+    revision_mode = "scm"
     settings = "os", "arch", "compiler", "build_type"
     options = {
         "shared": [True, False],

@@ -17,6 +17,7 @@ class PtexConan(ConanFile):
     topics = ("texture-mapping")
     homepage = "https://ptex.us"
     url = "https://github.com/conan-io/conan-center-index"
+    revision_mode = "scm"
 
     settings = "os", "arch", "compiler", "build_type"
     options = {

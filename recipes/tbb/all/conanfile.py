@@ -21,6 +21,7 @@ class TBBConan(ConanFile):
         "future-proof scalability"
     )
     topics = ("tbb", "threading", "parallelism", "tbbmalloc")
+    revision_mode = "scm"
 
     settings = "os", "arch", "compiler", "build_type"
     options = {
@@ -251,6 +252,7 @@ class TBBConan(ConanFile):
 
         # tbb
         self.cpp_info.components["libtbb"].set_property("cmake_target_name", "TBB::tbb")
+        self.cpp_info.components["libtbb"].set_property("cmake_target_aliases", ["TBB_tbb_LIBRARY"])
         self.cpp_info.components["libtbb"].libs = ["tbb{}".format(suffix)]
         if self.settings.os in ["Linux", "FreeBSD"]:
             self.cpp_info.components["libtbb"].system_libs = ["dl", "rt", "pthread"]

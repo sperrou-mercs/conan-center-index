@@ -19,6 +19,7 @@ class OpenVDBConan(ConanFile):
     topics = ("voxel", "voxelizer", "volume-rendering", "fx")
     homepage = "https://github.com/AcademySoftwareFoundation/openvdb"
     url = "https://github.com/conan-io/conan-center-index"
+    revision_mode = "scm"
 
     settings = "os", "arch", "compiler", "build_type"
     options = {
@@ -76,7 +77,7 @@ class OpenVDBConan(ConanFile):
 
     def requirements(self):
         self.requires("boost/1.79.0")
-        self.requires("onetbb/2020.3")
+        self.requires("tbb/2020.2")
         self.requires("openexr/2.5.7")  # required for IlmBase::Half
         if self.options.with_zlib:
             self.requires("zlib/[>=1.2.11 <2]")
@@ -223,7 +224,7 @@ if(OpenEXR_FOUND)
         self.cpp_info.components["openvdb-core"].requires = [
             "boost::iostreams",
             "boost::system",
-            "onetbb::onetbb",
+            "tbb::tbb",
             "openexr::openexr",  # should be "openexr::Half",
         ]
         if self.settings.os == "Windows":

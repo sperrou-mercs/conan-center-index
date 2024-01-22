@@ -16,6 +16,7 @@ class MicrosoftGslConan(ConanFile):
     url = "https://github.com/conan-io/conan-center-index"
     homepage = "https://github.com/microsoft/GSL"
     license = "MIT"
+    revision_mode = "scm"
     topics = ("gsl", "guidelines", "core", "span")
     no_copy_source = True
     package_type = "header-library"

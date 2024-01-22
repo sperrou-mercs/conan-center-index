@@ -1,0 +1,7 @@
+sources:
+  "23.11":
+    url: "https://github.com/MercenariesEngineering/USD/archive/353fcc8336f5e31d0b7cc29d5f6e5c30a14c8ad2.zip"
+    sha256: "a233551595fb37c5e43f6d6090f37cc467e8a1346d249fb81c04eaf7c330a1fc"
+patches:
+  "23.11":
+    - patch_file: "patches/00001-restore-cmake.patch"

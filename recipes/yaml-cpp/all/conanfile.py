@@ -18,6 +18,7 @@ class YamlCppConan(ConanFile):
     topics = ("yaml", "yaml-parser", "serialization", "data-serialization")
     description = "A YAML parser and emitter in C++"
     license = "MIT"
+    revision_mode = "scm"
     package_type = "library"
     settings = "os", "arch", "compiler", "build_type"
     options = {

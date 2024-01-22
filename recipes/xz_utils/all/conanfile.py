@@ -23,6 +23,7 @@ class XZUtilsConan(ConanFile):
     homepage = "https://tukaani.org/xz"
     topics = ("lzma", "xz", "compression")
     license = "Unlicense", "LGPL-2.1-or-later",  "GPL-2.0-or-later", "GPL-3.0-or-later"
+    revision_mode = "scm"
     package_type = "library"
     settings = "os", "arch", "compiler", "build_type"
     options = {

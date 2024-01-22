@@ -18,6 +18,7 @@ class ImathConan(ConanFile):
     topics = ("computer-graphics", "matrix", "openexr", "3d-vector")
     homepage = "https://github.com/AcademySoftwareFoundation/Imath"
     url = "https://github.com/conan-io/conan-center-index"
+    revision_mode = "scm"
 
     package_type = "library"
     settings = "os", "arch", "compiler", "build_type"

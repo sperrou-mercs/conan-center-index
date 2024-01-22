@@ -21,6 +21,7 @@ class M4Conan(ConanFile):
     url = "https://github.com/conan-io/conan-center-index"
     license = "GPL-3.0-only"
     settings = "os", "arch", "compiler", "build_type"
+    revision_mode = "scm"
 
     @property
     def _settings_build(self):

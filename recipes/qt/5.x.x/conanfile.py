@@ -4,10 +4,11 @@ from conan.tools.android import android_abi
 from conan.tools.apple import is_apple_os
 from conan.tools.build import build_jobs, check_min_cppstd, cross_building
 from conan.tools.env import Environment, VirtualBuildEnv, VirtualRunEnv
-from conan.tools.files import chdir, copy, get, load, replace_in_file, rm, rmdir, save, export_conandata_patches, apply_conandata_patches
+from conan.tools.files import chdir, copy, get, load, download, replace_in_file, rm, rmdir, save, export_conandata_patches, apply_conandata_patches
 from conan.tools.gnu import PkgConfigDeps
 from conan.tools.microsoft import is_msvc, msvc_runtime_flag, is_msvc_static_runtime, VCVars
 from conan.tools.scm import Version
+from conans import tools
 import configparser
 import glob
 import itertools
@@ -34,6 +35,7 @@ class QtConan(ConanFile):
     homepage = "https://www.qt.io"
     license = "LGPL-3.0-only"
     package_type = "library"
+    revision_mode = "scm"
     settings = "os", "arch", "compiler", "build_type"
     options = {
         "shared": [True, False],
@@ -66,6 +68,7 @@ class QtConan(ConanFile):
         "with_atspi": [True, False],
         "with_md4c": [True, False],
         "with_x11": [True, False],
+        "with_pyside": [True, False],
 
         "gui": [True, False],
         "widgets": [True, False],
@@ -93,12 +96,12 @@ class QtConan(ConanFile):
         "with_fontconfig": True,
         "with_icu": True,
         "with_harfbuzz": False,
-        "with_libjpeg": "libjpeg",
+        "with_libjpeg": "libjpeg-turbo",
         "with_libpng": True,
         "with_sqlite3": True,
-        "with_mysql": True,
-        "with_pq": True,
-        "with_odbc": True,
+        "with_mysql": False,
+        "with_pq": False,
+        "with_odbc": False,
         "with_libalsa": False,
         "with_openal": True,
         "with_zstd": True,
@@ -107,8 +110,9 @@ class QtConan(ConanFile):
         "with_dbus": False,
         "with_gssapi": False,
         "with_atspi": False,
-        "with_md4c": True,
+        "with_md4c": False,
         "with_x11": True,
+        "with_pyside": True,
 
         "gui": True,
         "widgets": True,
@@ -416,6 +420,8 @@ class QtConan(ConanFile):
             self.requires("at-spi2-core/2.50.0")
         if self.options.get_safe("with_md4c", False):
             self.requires("md4c/0.4.8")
+        if self.options.with_pyside:
+            self.requires("cpython/[>=3.7]")
 
     def package_id(self):
         del self.info.options.cross_compile
@@ -463,6 +469,23 @@ class QtConan(ConanFile):
         )
         save(self, os.path.join(self.source_folder, "qt5", "qtbase", "mkspecs", "features", "uikit", "bitcode.prf"), "")
 
+        if self.options.with_pyside:
+            pyside2_url = "https://download.qt.io/official_releases/QtForPython/pyside2/PySide2-{0}-src/pyside-setup-opensource-src-{0}.tar.xz"
+            get(self, pyside2_url.format(self.version), destination="pyside2", strip_root=True)
+            libclang_url = "http://download.qt.io/development_releases/prebuilt/libclang/{0}"
+            if self.settings.os == "Windows":
+                if self.settings.compiler.version == 14:
+                    clang_archive = "libclang-release_70-based-windows-vs2015_64.7z"
+                elif self.settings.compiler.version == 15:
+                    clang_archive = "libclang-release_80-based-windows-vs2017_64.7z"
+                else:
+                    clang_archive = "libclang-release_130-based-windows-vs2019_64.7z"
+            else:
+                clang_archive = "libclang-release_100-based-linux-Rhel7.6-gcc5.3-x86_64.7z"
+            download(self, libclang_url.format(clang_archive), clang_archive)
+            self.run(f"cmake -E tar xf {clang_archive}")
+            os.unlink(clang_archive)
+
     def generate(self):
         pc = PkgConfigDeps(self)
         pc.generate()
@@ -478,6 +501,19 @@ class QtConan(ConanFile):
         env.prepend_path("PKG_CONFIG_PATH", self.generators_folder)
         if self.settings.os == "Windows":
             env.prepend_path("PATH", os.path.join(self.source_folder, "qt5", "gnuwin32", "bin"))
+        
+        if self.options.with_pyside:
+            # There may be a DLL conflict. Put Qt and libClang DLLs in front of the PATH.
+            clang_path = os.path.join(self.source_folder, "libclang")
+            if self.settings.os == "Windows":
+                env.prepend_path("PATH", os.path.join(self.package_folder, "bin"))
+                env.prepend_path("PATH", os.path.join(clang_path, "bin"))
+            else:
+                env.prepend_path("LD_LIBRARY_PATH", os.path.join(clang_path, "lib"))
+            env.define("CLANG_INSTALL_DIR", clang_path)
+            env.define("PYSIDE_DISABLE_INTERNAL_QT_CONF", "1")
+            env.define("BUILD_TYPE", "")
+
         env.vars(self).save_script("conan_qt_env_file")
 
     def _make_program(self):
@@ -821,6 +857,30 @@ class QtConan(ConanFile):
 
             self.run("%s %s" % (os.path.join(self.source_folder, "qt5", "configure"), " ".join(args)))
             self.run(self._make_program())
+            self.run(f"{self._make_program()} install")
+        
+        if self.options.with_pyside:
+            qmake = "qmake"
+            if self.settings.os == "Windows":
+                qmake += ".exe"
+
+            arguments = [
+                "--qmake=\"%s\"" % os.path.join(self.package_folder, "bin", qmake),
+                "--skip-docs",
+                "--prefix=%s" % self.package_folder,
+                "--parallel=%s" % tools.cpu_count(),
+                "--openssl=\"%s\"" % os.path.join(self.deps_cpp_info["openssl"].rootpath, "bin"),
+                "--ignore-git",
+            ]
+            
+            if self.settings.build_type == "Debug":
+                arguments.append("--debug")
+
+            if self.settings.os == "Windows":
+                arguments.append("--jom")
+            
+            with chdir(self, os.path.join(self.source_folder, "pyside2")): 
+                self.run(f"python setup.py install {" ".join(arguments)}")
 
     @property
     def _cmake_core_extras_file(self):
@@ -830,8 +890,6 @@ class QtConan(ConanFile):
         return os.path.join("lib", "cmake", f"Qt5{module}", f"conan_qt_qt5_{module.lower()}private.cmake")
 
     def package(self):
-        with chdir(self, "build_folder"):
-            self.run(f"{self._make_program()} install")
         save(self, os.path.join(self.package_folder, "bin", "qt.conf"), """[Paths]
 Prefix = ..
 ArchData = bin/archdatadir
@@ -958,6 +1016,19 @@ Examples = bin/datadir/examples""")
             _create_private_module("Qml", ["CorePrivate", "Qml"])
 
     def package_info(self):
+        if self.options.with_pyside:
+            if self.settings.os == "Windows":
+                scriptsdir = os.path.join(self.package_folder, "Scripts")
+                self.output.info(f"Appending PATH environment variable: {scriptsdir}")
+                self.buildenv_info.prepend_path("PATH", scriptsdir)
+                self.buildenv_info.prepend_path("PYTHONPATH", os.path.join(self.package_folder, "Lib", "site-packages"))
+                self.runenv_info.prepend_path("PYTHONPATH", os.path.join(self.package_folder, "Lib", "site-packages"))
+            else:
+                self.buildenv_info.prepend_path("PYTHONPATH", os.path.join(self.package_folder, "lib", "python3.7", "site-packages"))
+                self.runenv_info.prepend_path("PYTHONPATH", os.path.join(self.package_folder, "lib", "python3.7", "site-packages"))
+                self.runenv_info.prepend_path("LD_LIBRARY_PATH", os.path.join(self.package_folder, "libclang", "lib"))
+                self.buildenv_info.prepend_path("CLANG_INSTALL_DIR", os.path.join(self.package_folder, "libclang"))
+
         self.cpp_info.set_property("cmake_file_name", "Qt5")
         self.cpp_info.set_property("pkg_config_name", "qt5")
 

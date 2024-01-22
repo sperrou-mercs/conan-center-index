@@ -28,6 +28,7 @@ class LibiconvConan(ConanFile):
     url = "https://github.com/conan-io/conan-center-index"
     homepage = "https://www.gnu.org/software/libiconv/"
     topics = ("iconv", "text", "encoding", "locale", "unicode", "conversion")
+    revision_mode = "scm"
 
     package_type = "library"
     settings = "os", "arch", "compiler", "build_type"

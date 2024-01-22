@@ -14,6 +14,7 @@ class LibsquishConan(ConanFile):
     topics = ("image", "compression", "dxt", "s3tc")
     homepage = "https://sourceforge.net/projects/libsquish"
     url = "https://github.com/conan-io/conan-center-index"
+    revision_mode = "scm"
 
     package_type = "library"
     settings = "os", "arch", "compiler", "build_type"

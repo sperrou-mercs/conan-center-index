@@ -14,6 +14,7 @@ class OpenfbxConan(ConanFile):
     topics = ("openfbx", "fbx", "importer")
     homepage = "https://github.com/nem0/OpenFBX"
     url = "https://github.com/conan-io/conan-center-index"
+    revision_mode = "scm"
 
     settings = "os", "arch", "compiler", "build_type"
     options = {

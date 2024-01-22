@@ -17,6 +17,7 @@ class LibpngConan(ConanFile):
     homepage = "http://www.libpng.org"
     license = "libpng-2.0"
     topics = ("png", "graphics", "image")
+    revision_mode = "scm"
     settings = "os", "arch", "compiler", "build_type"
     options = {
         "shared": [True, False],

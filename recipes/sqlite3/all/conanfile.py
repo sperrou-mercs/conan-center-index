@@ -17,6 +17,7 @@ class Sqlite3Conan(ConanFile):
     url = "https://github.com/conan-io/conan-center-index"
     homepage = "https://www.sqlite.org"
     topics = ("sqlite", "database", "sql", "serverless")
+    revision_mode = "scm"
     package_type = "library"
     settings = "os", "arch", "compiler", "build_type"
     options = {

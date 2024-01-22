@@ -20,6 +20,7 @@ class Hdf5Conan(ConanFile):
     homepage = "https://portal.hdfgroup.org/display/HDF5/HDF5"
     url = "https://github.com/conan-io/conan-center-index"
     package_type = "library"
+    revision_mode = "scm"
     settings = "os", "arch", "compiler", "build_type"
     options = {
         "shared": [True, False],

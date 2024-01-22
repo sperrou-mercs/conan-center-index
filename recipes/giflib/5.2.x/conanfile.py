@@ -14,6 +14,7 @@ class GiflibConan(ConanFile):
     license = "MIT"
     homepage = "http://giflib.sourceforge.net"
     topics = ("gif", "image", "multimedia", "format", "graphics")
+    revision_mode = "scm"
     package_type = "library"
     settings = "os", "arch", "compiler", "build_type"
     options = {

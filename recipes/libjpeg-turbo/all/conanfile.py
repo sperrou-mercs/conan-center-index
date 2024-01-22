@@ -17,6 +17,7 @@ class LibjpegTurboConan(ConanFile):
     url = "https://github.com/conan-io/conan-center-index"
     homepage = "https://libjpeg-turbo.org"
     topics = ("jpeg", "libjpeg", "image", "multimedia", "format", "graphics")
+    revision_mode = "scm"
     provides = "libjpeg"
     settings = "os", "arch", "compiler", "build_type"
     options = {

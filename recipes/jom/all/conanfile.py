@@ -14,6 +14,7 @@ class JomInstallerConan(ConanFile):
     topics = ("build", "make", "makefile", "nmake")
     package_type = "application"
     settings = "os", "arch", "compiler", "build_type"
+    revision_mode = "scm"
 
     def layout(self):
         pass

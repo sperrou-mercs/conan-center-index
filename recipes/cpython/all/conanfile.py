@@ -1,5 +1,6 @@
 from conans import AutoToolsBuildEnvironment, ConanFile, MSBuild, tools
 from conans.errors import ConanInvalidConfiguration
+from conan.tools.microsoft import MSBuildDeps
 from io import StringIO
 import os
 import re
@@ -14,6 +15,7 @@ class CPythonConan(ConanFile):
     homepage = "https://www.python.org"
     description = "Python is a programming language that lets you work quickly and integrate systems more effectively."
     topics = ("python", "cpython", "language", "script")
+    revision_mode = "scm"
     license = ("Python-2.0",)
     exports_sources = "patches/**"
     settings = "os", "arch", "compiler", "build_type"
@@ -51,7 +53,7 @@ class CPythonConan(ConanFile):
         "with_gdbm": True,
         "with_nis": False,
         "with_sqlite3": True,
-        "with_tkinter": True,
+        "with_tkinter": False,
         "with_curses": True,
 
         # Python 2 options
@@ -129,17 +131,17 @@ class CPythonConan(ConanFile):
 
                 del self.options.with_bsddb
                 del self.options.with_lzma
-        if self.settings.compiler == "Visual Studio":
+        # if self.settings.compiler == "Visual Studio":
             # The msbuild generator only works with Visual Studio
-            self.generators.append("MSBuildDeps")
+            # self.generators.append("MSBuildDeps")
 
     def validate(self):
         if self.options.shared:
             if self.settings.compiler == "Visual Studio" and "MT" in self.settings.compiler.runtime:
                 raise ConanInvalidConfiguration("cpython does not support MT(d) runtime when building a shared cpython library")
         if self.settings.compiler == "Visual Studio":
-            if self.options.optimizations:
-                raise ConanInvalidConfiguration("This recipe does not support optimized MSVC cpython builds (yet)")
+            # if self.options.optimizations:
+            #     raise ConanInvalidConfiguration("This recipe does not support optimized MSVC cpython builds (yet)")
                 # FIXME: should probably throw when cross building
                 # FIXME: optimizations for Visual Studio, before building the final `build_type`:
                 # 1. build the MSVC PGInstrument build_type,
@@ -175,8 +177,8 @@ class CPythonConan(ConanFile):
     def requirements(self):
         self.requires("zlib/1.2.11")
         if self._supports_modules:
-            self.requires("openssl/1.1.1l")
-            self.requires("expat/2.4.1")
+            self.requires("openssl/[>=1.1 <4]")
+            self.requires("expat/2.5.0")
             if self._with_libffi:
                 self.requires("libffi/3.2.1")
             if tools.Version(self._version_number_only) < "3.8":
@@ -197,7 +199,7 @@ class CPythonConan(ConanFile):
             # TODO: Add nis when available.
             raise ConanInvalidConfiguration("nis is not available on CCI (yet)")
         if self.options.get_safe("with_sqlite3"):
-            self.requires("sqlite3/3.36.0")
+            self.requires("sqlite3/[>=3 <4]")
         if self.options.get_safe("with_tkinter"):
             self.requires("tk/8.6.10")
         if self.options.get_safe("with_curses", False):
@@ -205,7 +207,7 @@ class CPythonConan(ConanFile):
         if self.options.get_safe("with_bsddb", False):
             self.requires("libdb/5.3.28")
         if self.options.get_safe("with_lzma", False):
-            self.requires("xz_utils/5.2.5")
+            self.requires("xz_utils/5.4.5")
 
     def _configure_autotools(self):
         if self._autotools:
@@ -405,6 +407,10 @@ class CPythonConan(ConanFile):
                 self._upgrade_single_project_file(project_file)
                 msbuild.build(project_file, upgrade_project=False, build_type="Debug" if self.settings.build_type == "Debug" else "Release",
                               platforms=self._msvc_archs, properties=msbuild_properties)
+
+    def generate(self):
+        ms = MSBuildDeps(self)
+        ms.generate()
 
     def build(self):
         # FIXME: these checks belong in validate, but the versions of dependencies are not available there yet
@@ -658,9 +664,11 @@ class CPythonConan(ConanFile):
 
         self.cpp_info.components["_python_copy"].names["pkg_config"] = "python{}".format(py_version.major)
         self.cpp_info.components["_python_copy"].requires = ["python"]
+        self.cpp_info.components["_python_copy"].includedirs = []
         self.cpp_info.components["_python_copy"].libdirs = []
 
         # embed component: "Embed Python into an application"
+        self.cpp_info.components["embed"].includedirs = []
         self.cpp_info.components["embed"].libs = [self._lib_name]
         self.cpp_info.components["embed"].libdirs = [libdir]
         self.cpp_info.components["embed"].names["pkg_config"] = "python-{}.{}-embed".format(py_version.major, py_version.minor)
@@ -668,11 +676,13 @@ class CPythonConan(ConanFile):
 
         self.cpp_info.components["_embed_copy"].requires = ["embed"]
         self.cpp_info.components["_embed_copy"].names["pkg_config"] = ["python{}-embed".format(py_version.major)]
+        self.cpp_info.components["_embed_copy"].includedirs = []
         self.cpp_info.components["_embed_copy"].libdirs = []
 
         if self._supports_modules:
             # hidden components: the C extensions of python are built as dynamically loaded shared libraries.
             # C extensions or applications with an embedded Python should not need to link to them..
+            self.cpp_info.components["_hidden"].includedirs = []
             self.cpp_info.components["_hidden"].requires = [
                 "openssl::openssl",
                 "expat::expat",
@@ -704,12 +714,16 @@ class CPythonConan(ConanFile):
             bindir = os.path.join(self.package_folder, "bin")
             self.output.info("Appending PATH environment variable: {}".format(bindir))
             self.env_info.PATH.append(bindir)
+            self.buildenv_info.prepend_path("PATH", bindir)
+            self.runenv_info.prepend_path("PATH", bindir)
 
         python = self._cpython_interpreter_path
         self.user_info.python = python
         if self.options.env_vars:
             self.output.info("Setting PYTHON environment variable: {}".format(python))
             self.env_info.PYTHON = python
+            self.buildenv_info.define("PYTHON", python)
+            self.runenv_info.define("PYTHON", python)
 
         if self.settings.compiler == "Visual Studio":
             pythonhome = os.path.join(self.package_folder, "bin")
@@ -727,6 +741,8 @@ class CPythonConan(ConanFile):
             if self.options.env_vars:
                 self.output.info("Setting PYTHONHOME environment variable: {}".format(pythonhome))
                 self.env_info.PYTHONHOME = pythonhome
+                self.buildenv_info.define("PYTHONHOME", pythonhome)
+                self.runenv_info.define("PYTHONHOME", pythonhome)
 
         if self._is_py2:
             python_root = ""
@@ -735,4 +751,6 @@ class CPythonConan(ConanFile):
             if self.options.env_vars:
                 self.output.info("Setting PYTHON_ROOT environment variable: {}".format(python_root))
                 self.env_info.PYTHON_ROOT = python_root
+                self.buildenv_info.define("PYTHON_ROOT", python_root)
+                self.runenv_info.define("PYTHON_ROOT", python_root)
         self.user_info.python_root = python_root

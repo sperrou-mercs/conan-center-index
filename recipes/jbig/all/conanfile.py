@@ -14,6 +14,7 @@ class JBigConan(ConanFile):
     description = "jbig for the Windows build of ImageMagick"
     topics = ("jbig", "imagemagick", "window", "graphic")
     license = "GPL-2.0"
+    revision_mode = "scm"
 
     settings = "os", "arch", "compiler", "build_type"
     options = {

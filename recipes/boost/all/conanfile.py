@@ -69,6 +69,7 @@ class BoostConan(ConanFile):
     homepage = "https://www.boost.org"
     license = "BSL-1.0"
     topics = ("libraries", "cpp")
+    revision_mode = "scm"
 
     settings = "os", "arch", "compiler", "build_type"
     options = {
@@ -84,8 +85,8 @@ class BoostConan(ConanFile):
         "layout": ["system", "versioned", "tagged", "b2-default"],
         "magic_autolink": [True, False],  # enables BOOST_ALL_NO_LIB
         "diagnostic_definitions": [True, False],  # enables BOOST_LIB_DIAGNOSTIC
-        "python_executable": [None, "ANY"],  # system default python installation is used, if None
-        "python_version": [None, "ANY"],  # major.minor; computed automatically, if None
+        # "python_executable": [None, "ANY"],  # system default python installation is used, if None
+        # "python_version": [None, "ANY"],  # major.minor; computed automatically, if None
         "namespace": ["ANY"],  # custom boost namespace for bcp, e.g. myboost
         "namespace_alias": [True, False],  # enable namespace alias for bcp, boost=myboost
         "multithreading": [True, False],  # enables multithreading support
@@ -123,8 +124,8 @@ class BoostConan(ConanFile):
         "layout": "system",
         "magic_autolink": False,
         "diagnostic_definitions": False,
-        "python_executable": None,
-        "python_version": None,
+        # "python_executable": None,
+        # "python_version": None,
         "namespace": "boost",
         "namespace_alias": False,
         "multithreading": True,
@@ -235,14 +236,14 @@ class BoostConan(ConanFile):
     def _is_clang_cl(self):
         return self.settings.os == "Windows" and self.settings.compiler == "clang"
 
-    @property
-    def _python_executable(self):
-        """
-        obtain full path to the python interpreter executable
-        :return: path to the python interpreter executable, either set by option, or system default
-        """
-        exe = self.options.python_executable if self.options.python_executable else sys.executable
-        return str(exe).replace("\\", "/")
+    # @property
+    # def _python_executable(self):
+    #     """
+    #     obtain full path to the python interpreter executable
+    #     :return: path to the python interpreter executable, either set by option, or system default
+    #     """
+    #     exe = self.options.python_executable if self.options.python_executable else sys.executable
+    #     return str(exe).replace("\\", "/")
 
     @property
     def _is_windows_platform(self):
@@ -410,11 +411,10 @@ class BoostConan(ConanFile):
             self.options.rm_safe("i18n_backend_iconv")
             self.options.rm_safe("i18n_backend_icu")
 
-        if not self.options.without_python:
-            if not self.options.python_version:
-                self.options.python_version = self._detect_python_version()
-                self.options.python_executable = self._python_executable
-        else:
+            # if not self.options.python_version:
+            #     self.options.python_version = self._detect_python_version()
+            #     self.options.python_executable = self._python_executable
+        if self.options.without_python:
             self.options.rm_safe("python_buildid")
 
         if not self._stacktrace_addr2line_available:
@@ -535,7 +535,7 @@ class BoostConan(ConanFile):
         if self._with_bzip2:
             self.requires("bzip2/1.0.8")
         if self._with_lzma:
-            self.requires("xz_utils/5.4.4")
+            self.requires("xz_utils/5.4.5")
         if self._with_zstd:
             self.requires("zstd/1.5.5")
         if self._with_stacktrace_backtrace:
@@ -545,6 +545,8 @@ class BoostConan(ConanFile):
             self.requires("icu/73.2")
         if self._with_iconv:
             self.requires("libiconv/1.17")
+        if not self.options.without_python:
+            self.requires("cpython/[>=3.7]")
 
     def package_id(self):
         del self.info.options.i18n_backend
@@ -555,9 +557,9 @@ class BoostConan(ConanFile):
             del self.info.options.debug_level
             del self.info.options.filesystem_version
             del self.info.options.pch
-            del self.info.options.python_executable  # PATH to the interpreter is not important, only version matters
-            if self.info.options.without_python:
-                del self.info.options.python_version
+            # del self.info.options.python_executable  # PATH to the interpreter is not important, only version matters
+            # if self.info.options.without_python:
+            #     del self.info.options.python_version
 
     def build_requirements(self):
         if not self.options.header_only:
@@ -639,7 +641,7 @@ class BoostConan(ConanFile):
 
         NOTE: distutils is deprecated and breaks the recipe since Python 3.10
         """
-        python_version_parts = str(self.info.options.python_version).split('.')
+        python_version_parts = str(self._python_version).split('.')
         python_major = int(python_version_parts[0])
         python_minor = int(python_version_parts[1])
         if(python_major >= 3 and python_minor >= 10):
@@ -656,12 +658,12 @@ class BoostConan(ConanFile):
                                        "import sys; "
                                        "print('{}.{}'.format(sys.version_info[0], sys.version_info[1]))")
 
-    @property
-    def _python_version(self):
-        version = self._detect_python_version()
-        if self.options.python_version and version != self.options.python_version:
-            raise ConanInvalidConfiguration(f"detected python version {version} doesn't match conan option {self.options.python_version}")
-        return version
+    # @property
+    # def _python_version(self):
+    #     version = self._detect_python_version()
+    #     if self.options.python_version and version != self.options.python_version:
+    #         raise ConanInvalidConfiguration(f"detected python version {version} doesn't match conan option {self.options.python_version}")
+    #     return version
 
     @property
     def _python_inc(self):
@@ -816,6 +818,10 @@ class BoostConan(ConanFile):
             self.run(command)
 
     def build(self):
+        if not self.options.without_python:
+            exefilename = "python.exe" if self.settings.os == "Windows" else "python"
+            self._python_executable = os.path.join(self.deps_cpp_info["cpython"].bin_paths[0], exefilename).replace('\\', '/')
+            self._python_version = self._detect_python_version()
         stacktrace_jamfile = os.path.join(self.source_folder, "libs", "stacktrace", "build", "Jamfile.v2")
         if cross_building(self, skip_x64_x86=True):
             # When cross building, do not attempt to run the test-executable (assume they work)
@@ -1604,7 +1610,7 @@ class BoostConan(ConanFile):
 
             libformatdata = {}
             if not self.options.without_python:
-                pyversion = Version(self._python_version)
+                pyversion = Version(self.deps_cpp_info["cpython"].version)
                 libformatdata["py_major"] = pyversion.major
                 libformatdata["py_minor"] = pyversion.minor
 
@@ -1730,12 +1736,12 @@ class BoostConan(ConanFile):
                     self.cpp_info.components["stacktrace"].defines.append("BOOST_STACKTRACE_GNU_SOURCE_NOT_REQUIRED")
 
             if not self.options.without_python:
-                pyversion = Version(self._python_version)
+                pyversion = Version(self.deps_cpp_info["cpython"].version)
                 self.cpp_info.components[f"python{pyversion.major}{pyversion.minor}"].requires = ["python"]
                 if not self._shared:
                     self.cpp_info.components["python"].defines.append("BOOST_PYTHON_STATIC_LIB")
 
-                self.cpp_info.components[f"numpy{pyversion.major}{pyversion.minor}"].requires = ["numpy"]
+                # self.cpp_info.components[f"numpy{pyversion.major}{pyversion.minor}"].requires = ["numpy"]
 
             if is_msvc(self) or self._is_clang_cl:
                 # https://github.com/conan-community/conan-boost/issues/127#issuecomment-404750974

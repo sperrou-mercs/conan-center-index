@@ -15,6 +15,7 @@ class NinjaConan(ConanFile):
     url = "https://github.com/conan-io/conan-center-index"
     homepage = "https://github.com/ninja-build/ninja"
     topics = ("ninja", "build")
+    revision_mode = "scm"
     settings = "os", "arch", "compiler", "build_type"
 
     def layout(self):

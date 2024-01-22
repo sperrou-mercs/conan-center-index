@@ -16,6 +16,7 @@ class LibtiffConan(ConanFile):
     license = "MIT"
     homepage = "http://www.simplesystems.org/libtiff"
     topics = ("tiff", "image", "bigtiff", "tagged-image-file-format")
+    revision_mode = "scm"
 
     package_type = "library"
     settings = "os", "arch", "compiler", "build_type"
@@ -35,7 +36,7 @@ class LibtiffConan(ConanFile):
         "shared": False,
         "fPIC": True,
         "lzma": True,
-        "jpeg": "libjpeg",
+        "jpeg": "libjpeg-turbo",
         "zlib": True,
         "libdeflate": True,
         "zstd": True,

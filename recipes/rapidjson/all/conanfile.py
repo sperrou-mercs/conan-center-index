@@ -13,6 +13,7 @@ class RapidjsonConan(ConanFile):
     url = "https://github.com/conan-io/conan-center-index"
     homepage = "http://rapidjson.org"
     license = "MIT"
+    revision_mode = "scm"
     package_type = "header-library"
     package_id_embed_mode = "minor_mode"
     settings = "os", "arch", "compiler", "build_type"

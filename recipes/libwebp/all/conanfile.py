@@ -15,6 +15,7 @@ class LibwebpConan(ConanFile):
     homepage = "https://chromium.googlesource.com/webm/libwebp"
     topics = ("image", "libwebp", "webp", "decoding", "encoding")
     license = "BSD-3-Clause"
+    revision_mode = "scm"
 
     settings = "os", "arch", "compiler", "build_type"
     options = {

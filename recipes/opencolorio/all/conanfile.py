@@ -17,6 +17,7 @@ class OpenColorIOConan(ConanFile):
     homepage = "https://opencolorio.org/"
     url = "https://github.com/conan-io/conan-center-index"
     topics = ("colors", "visual", "effects", "animation")
+    revision_mode = "scm"
     settings = "os", "arch", "compiler", "build_type"
     options = {
         "shared": [True, False],

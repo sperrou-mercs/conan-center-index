@@ -26,6 +26,7 @@ class LibcurlConan(ConanFile):
             "ftp", "gopher", "http", "imap", "ldap", "mqtt", "pop3", "rtmp", "rtsp",
             "scp", "sftp", "smb", "smtp", "telnet", "tftp")
     package_type = "library"
+    revision_mode = "scm"
     settings = "os", "arch", "compiler", "build_type"
     options = {
         "shared": [True, False],

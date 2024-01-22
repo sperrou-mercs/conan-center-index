@@ -22,6 +22,7 @@ class MpdecimalConan(ConanFile):
     url = "https://github.com/conan-io/conan-center-index"
     homepage = "http://www.bytereef.org/mpdecimal"
     topics = ("multiprecision", "library")
+    revision_mode = "scm"
 
     package_type = "library"
     settings = "os", "arch", "compiler", "build_type"

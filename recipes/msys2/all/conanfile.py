@@ -40,6 +40,7 @@ class MSYS2Conan(ConanFile):
     homepage = "http://www.msys2.org"
     license = "MSYS license"
     topics = ("msys", "unix", "subsystem")
+    revision_mode = "scm"
 
     settings = "os", "arch"
     # "exclude_files" "packages" "additional_packages" values are a comma separated list

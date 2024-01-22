@@ -19,6 +19,7 @@ class B2Conan(ConanFile):
     topics = ("installer", "builder", "build", "build-system")
     license = "BSL-1.0"
     url = "https://github.com/conan-io/conan-center-index"
+    revision_mode = "scm"
 
     settings = "os", "arch"
     '''

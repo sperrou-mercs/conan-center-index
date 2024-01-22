@@ -16,6 +16,7 @@ class Bzip2Conan(ConanFile):
     description = "bzip2 is a free and open-source file compression program that uses the Burrows Wheeler algorithm."
     topics = ("data-compressor", "file-compression")
     package_type = "library"
+    revision_mode = "scm"
     settings = "os", "arch", "compiler", "build_type"
     options = {
         "shared": [True, False],

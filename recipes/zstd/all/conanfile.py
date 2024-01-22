@@ -15,6 +15,7 @@ class ZstdConan(ConanFile):
     description = "Zstandard - Fast real-time compression algorithm"
     topics = ("zstandard", "compression", "algorithm", "decoder")
     license = "BSD-3-Clause"
+    revision_mode = "scm"
 
     package_type = "library"
     settings = "os", "arch", "compiler", "build_type"

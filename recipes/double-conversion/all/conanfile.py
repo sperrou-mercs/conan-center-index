@@ -14,6 +14,7 @@ class DoubleConversionConan(ConanFile):
     description = "Efficient binary-decimal and decimal-binary conversion routines for IEEE doubles."
     license = "BSD-3-Clause"
     topics = ("google", "decimal-binary", "conversion")
+    revision_mode = "scm"
 
     package_type = "library"
     settings = "os", "arch", "compiler", "build_type"

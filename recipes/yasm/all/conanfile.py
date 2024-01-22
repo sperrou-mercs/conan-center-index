@@ -19,6 +19,7 @@ class YASMConan(ConanFile):
     topics = ("yasm", "installer", "assembler")
     license = "BSD-2-Clause"
     settings = "os", "arch", "compiler", "build_type"
+    revision_mode = "scm"
 
     @property
     def _settings_build(self):

@@ -16,6 +16,7 @@ class CbloscConan(ConanFile):
     url = "https://github.com/conan-io/conan-center-index"
     homepage = "https://github.com/Blosc/c-blosc"
     package_type = "library"
+    revision_mode = "scm"
     settings = "os", "arch", "compiler", "build_type"
     options = {
         "shared": [True, False],
@@ -30,8 +31,8 @@ class CbloscConan(ConanFile):
         "shared": False,
         "fPIC": True,
         "simd_intrinsics": "sse2",
-        "with_lz4": True,
-        "with_snappy": True,
+        "with_lz4": False,
+        "with_snappy": False,
         "with_zlib": True,
         "with_zstd": True,
     }

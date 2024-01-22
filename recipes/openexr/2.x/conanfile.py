@@ -19,6 +19,7 @@ class OpenEXRConan(ConanFile):
     homepage = "https://github.com/AcademySoftwareFoundation/openexr"
     url = "https://github.com/conan-io/conan-center-index"
     package_type = "library"
+    revision_mode = "scm"
     settings = "os", "arch", "compiler", "build_type"
     options = {
         "shared": [True, False],

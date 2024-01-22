@@ -2,7 +2,7 @@ from conan import ConanFile
 from conan.errors import ConanInvalidConfiguration
 from conan.tools.apple import is_apple_os
 from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps, cmake_layout
-from conan.tools.files import apply_conandata_patches, copy, export_conandata_patches, get, load, rm, rmdir, save
+from conan.tools.files import apply_conandata_patches, copy, export_conandata_patches, get, load, rm, rmdir, save, replace_in_file
 from conan.tools.microsoft import check_min_vs
 from conan.tools.scm import Version
 import glob
@@ -19,6 +19,7 @@ class EmbreeConan(ConanFile):
     topics = ("embree", "raytracing", "rendering")
     description = "Intel's collection of high-performance ray tracing kernels."
     homepage = "https://embree.github.io/"
+    revision_mode = "scm"
 
     package_type = "library"
     settings = "os", "arch", "compiler", "build_type"
@@ -67,7 +68,7 @@ class EmbreeConan(ConanFile):
         "ray_masking": False,
         "backface_culling": False,
         "ignore_invalid_rays": False,
-        "with_tbb": False,
+        "with_tbb": True,
     }
 
     @property
@@ -133,7 +134,7 @@ class EmbreeConan(ConanFile):
 
     def requirements(self):
         if self.options.with_tbb:
-            self.requires("onetbb/2021.7.0")
+            self.requires("tbb/2020.2")
 
     def validate(self):
         if not (self._has_sse_avx or (self._embree_has_neon_support and self._has_neon)):
@@ -156,6 +157,7 @@ class EmbreeConan(ConanFile):
 
     def source(self):
         get(self, **self.conan_data["sources"][self.version], strip_root=True)
+        replace_in_file(self, os.path.join(self.source_folder, "common", "tasking", "CMakeLists.txt"), "find_package(TBB 2021", "find_package(TBB 2020")
 
     def generate(self):
         tc = CMakeToolchain(self)
@@ -217,6 +219,8 @@ class EmbreeConan(ConanFile):
         copy(self, "LICENSE.txt", src=self.source_folder, dst=os.path.join(self.package_folder, "licenses"))
         cmake = CMake(self)
         cmake.install()
+        copy(self, "*.h", src=os.path.join(self.source_folder, "common"), dst=os.path.join(self.package_folder, "common"))
+        copy(self, "*.h", src=os.path.join(self.source_folder, "kernels"), dst=os.path.join(self.package_folder, "kernels"))
         rmdir(self, os.path.join(self.package_folder, "cmake"))
         rmdir(self, os.path.join(self.package_folder, "lib", "cmake"))
         rmdir(self, os.path.join(self.package_folder, "share"))

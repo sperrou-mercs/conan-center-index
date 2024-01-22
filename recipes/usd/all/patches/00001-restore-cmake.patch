@@ -1,0 +1,439 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 2027a7861..c9f9d1de3 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -13,68 +13,6 @@ if (NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
+     endif()
+ endif()
+ 
+-#### This part is added to the original file in order to tweak the build for Rumba ##
+-set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
+-if( DEFINED MAQUINA_CONAN_BUILD_INFO_PATH )
+-    include( "${MAQUINA_CONAN_BUILD_INFO_PATH}" )
+-else()
+-    include( "${CMAKE_BINARY_DIR}/conanbuildinfo.cmake" )
+-endif()
+-conan_basic_setup(TARGETS)
+-
+-# help Usd build to use our dependencies
+-if( DEFINED HDF5_ROOT )
+-    # set HDF5_ROOT in the env so FindHDF5.cmake can find it
+-    message( status "Using HDF5_ROOT: ${HDF5_ROOT}" )
+-    set( ENV{HDF5_ROOT} ${HDF5_ROOT} )
+-endif()
+-
+-if( UNIX )
+-    if (NOT DEFINED Boost_PROGRAM_OPTIONS_FOUND)
+-        set( Boost_PROGRAM_OPTIONS_FOUND on )
+-        set( Boost_PROGRAM_OPTIONS_LIBRARY "${CONAN_LIB_DIRS_BOOST}/libboost_program_options.so" )
+-        set( Boost_PYTHON37_LIBRARY "${CONAN_LIB_DIRS_BOOST}/libboost_python37.so" )
+-    endif ()
+-    
+-    if (NOT DEFINED OIIO_LOCATION)
+-        set( OIIO_LOCATION "${CONAN_OPENIMAGEIO_ROOT}" )
+-    endif ()
+-
+-    set( OPENGL_gl_LIBRARY "${CONAN_LIB_DIRS_GLU}/libGLU.a" )
+-    include_directories( "${CONAN_INCLUDE_DIRS_GLU}" )
+-else()
+-    if( NOT DEFINED CONAN_LIB_DIRS_BOOST )
+-        set( CONAN_LIB_DIRS_BOOST ${CONAN_LIB_DIRS_BOOST_RELEASE} )
+-    endif()
+-    if( NOT DEFINED CONAN_LIB_DIRS_GLEW )
+-        set( CONAN_LIB_DIRS_GLEW ${CONAN_LIB_DIRS_GLEW_RELEASE} )
+-    endif()
+-    if( NOT DEFINED CONAN_DEFINES )
+-        set( CONAN_DEFINES ${CONAN_DEFINES_RELEASE} )
+-    endif()
+-
+-    if( NOT DEFINED Boost_PROGRAM_OPTIONS_FOUND )
+-        set( Boost_PROGRAM_OPTIONS_FOUND on )
+-        set( Boost_PROGRAM_OPTIONS_LIBRARY "${CONAN_LIB_DIRS_BOOST}/boost_program_options.lib" )
+-        set( Boost_PYTHON37_LIBRARY "${CONAN_LIB_DIRS_BOOST}/boost_python37.lib" )
+-    endif ()
+-
+-    if (NOT DEFINED OIIO_LOCATION)
+-        set( OIIO_LOCATION "${CONAN_OPENIMAGEIO_ROOT_RELEASE}" )
+-    endif ()
+-
+-    set( GLEW_LIBRARY "${CONAN_LIB_DIRS_GLEW}/glew32.lib" )
+-endif()
+-add_definitions(${CONAN_DEFINES})
+-
+-# tweak compile options
+-if( UNIX ) 
+-    add_compile_options( -DUSD_FORCE_GNU_STL_EXTENSIONS )
+-    # there are too much warnings, disable them completely to not flood the console output
+-    add_compile_options(-Wno-everything -Wno-inconsistent-missing-override -Wno-potentially-evaluated-exp -Wno-shadow -Wno-shadow-field -Wno-shadow-uncaptured-local -Wno-unused-private-field -Wno-expansion-to-defined -Wno-unneeded-internal-declaration -Wno-unused-variable )
+-endif()
+-#### end of tweaks ##
+-
+ list(APPEND CMAKE_MODULE_PATH
+     ${PROJECT_SOURCE_DIR}/cmake/defaults
+     ${PROJECT_SOURCE_DIR}/cmake/modules
+diff --git a/cmake/defaults/Packages.cmake b/cmake/defaults/Packages.cmake
+index 2bb1f30d0..52099817d 100644
+--- a/cmake/defaults/Packages.cmake
++++ b/cmake/defaults/Packages.cmake
+@@ -128,13 +128,12 @@ if(PXR_ENABLE_PYTHON_SUPPORT)
+     # Find the component under the versioned name and then set the generic
+     # Boost_PYTHON_LIBRARY variable so that we don't have to duplicate this
+     # logic in each library's CMakeLists.txt.
+-    set(python_version_nodot "${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}")
+     find_package(Boost
+         COMPONENTS
+-        python${python_version_nodot}
++        python
+         REQUIRED
+     )
+-    set(Boost_PYTHON_LIBRARY "${Boost_PYTHON${python_version_nodot}_LIBRARY}")
++    set(Boost_PYTHON_LIBRARY Boost::python)
+ 
+     # --Jinja2
+     find_package(Jinja2)
+diff --git a/cmake/modules/FindAlembic.cmake b/cmake/modules/FindAlembic.cmake
+index e1af1da21..680e5ec49 100644
+--- a/cmake/modules/FindAlembic.cmake
++++ b/cmake/modules/FindAlembic.cmake
+@@ -32,13 +32,13 @@
+ #=============================================================================
+ #
+ # The module defines the following variables:
+-#   ALEMBIC_INCLUDE_DIR - path to Alembic headers
++#   Alembic_INCLUDE_DIR - path to Alembic headers
+ #   ALEMBIC_LIBRARY_DIR - path to Alembic static libs
+-#       ALEMBIC_FOUND       - true if the Alembic was found
++#       Alembic_FOUND       - true if the Alembic was found
+ #
+ # Example usage:
+ #   find_package(ALEMBIC)
+-#   if(ALEMBIC_FOUND)
++#   if(Alembic_FOUND)
+ #     message("ALEMBIC found: ${ALEMBIC_LIBRARY_DIR}")
+ #   endif()
+ #
+@@ -100,7 +100,7 @@ if(NOT ALEMBIC_LIBRARY)
+ 	PATHS ${LIBRARY_PATHS}
+     )
+ 
+-    set (ALEMBIC_LIBRARIES
++    set (Alembic_LIBRARIES
+ 	${ALEMBIC_ABCGEOM_LIBRARY}
+ 	${ALEMBIC_ABC_LIBRARY}
+ 	${ALEMBIC_ABCCOREHDF5_LIBRARY}
+@@ -112,7 +112,7 @@ if(NOT ALEMBIC_LIBRARY)
+ 
+     get_filename_component(ALEMBIC_LIBRARY_DIR ${ALEMBIC_ABC_LIBRARY} PATH)
+ else()
+-    set (ALEMBIC_LIBRARIES
++    set (Alembic_LIBRARIES
+ 	${ALEMBIC_LIBRARY}
+     )
+ 
+@@ -121,7 +121,7 @@ endif()
+ 
+ 
+ # Find Alembic include dir
+-find_path (ALEMBIC_INCLUDE_DIR Alembic/Abc/All.h
++find_path (Alembic_INCLUDE_DIR Alembic/Abc/All.h
+            HINTS ${ALEMBIC_DIR}/include
+ )
+ 
+@@ -129,10 +129,10 @@ include(FindPackageHandleStandardArgs)
+ 
+ find_package_handle_standard_args( "Alembic"
+                   DEFAULT_MSG
+-                  ALEMBIC_LIBRARIES
++                  Alembic_LIBRARIES
+                   ALEMBIC_LIBRARY_DIR
+-                  ALEMBIC_INCLUDE_DIR
++                  Alembic_INCLUDE_DIR
+ )
+-if(NOT ALEMBIC_FOUND)
++if(NOT Alembic_FOUND)
+     message(WARNING "Try using -D ALEMBIC_DIR=/path/to/alembic")
+ endif()
+diff --git a/cmake/modules/FindOpenImageIO.cmake b/cmake/modules/FindOpenImageIO.cmake
+index 9df47ff23..87e713bb7 100644
+--- a/cmake/modules/FindOpenImageIO.cmake
++++ b/cmake/modules/FindOpenImageIO.cmake
+@@ -73,7 +73,7 @@ find_path(OIIO_INCLUDE_DIR
+         "OpenImageIO headers path"
+ )
+ 
+-list(APPEND OIIO_INCLUDE_DIRS ${OIIO_INCLUDE_DIR})
++list(APPEND OpenImageIO_INCLUDE_DIRS ${OIIO_INCLUDE_DIR})
+ 
+ foreach(OIIO_LIB
+     OpenImageIO
+@@ -93,7 +93,7 @@ foreach(OIIO_LIB
+     )
+ 
+     if(OIIO_${OIIO_LIB}_LIBRARY)
+-        list(APPEND OIIO_LIBRARIES ${OIIO_${OIIO_LIB}_LIBRARY})
++        list(APPEND OpenImageIO_LIBRARIES ${OIIO_${OIIO_LIB}_LIBRARY})
+     endif()
+ endforeach(OIIO_LIB)
+ 
+@@ -122,7 +122,7 @@ foreach(OIIO_BIN
+     endif()
+ endforeach(OIIO_BIN)
+ 
+-if(OIIO_INCLUDE_DIRS AND EXISTS "${OIIO_INCLUDE_DIR}/OpenImageIO/oiioversion.h")
++if(OpenImageIO_INCLUDE_DIRS AND EXISTS "${OIIO_INCLUDE_DIR}/OpenImageIO/oiioversion.h")
+     file(STRINGS ${OIIO_INCLUDE_DIR}/OpenImageIO/oiioversion.h
+         MAJOR
+         REGEX
+@@ -147,8 +147,8 @@ include(FindPackageHandleStandardArgs)
+ 
+ find_package_handle_standard_args(OpenImageIO
+     REQUIRED_VARS
+-        OIIO_LIBRARIES
+-        OIIO_INCLUDE_DIRS
++        OpenImageIO_LIBRARIES
++        OpenImageIO_INCLUDE_DIRS
+     VERSION_VAR
+         OIIO_VERSION
+ )
+diff --git a/cmake/modules/FindOpenSubdiv.cmake b/cmake/modules/FindOpenSubdiv.cmake
+index 77bdb27ca..16f44b6ef 100644
+--- a/cmake/modules/FindOpenSubdiv.cmake
++++ b/cmake/modules/FindOpenSubdiv.cmake
+@@ -1,9 +1,9 @@
+ # - Find OpenSubdiv library
+ # Find the native OpenSubdiv includes and library
+ # This module defines
+-#  OPENSUBDIV_INCLUDE_DIRS, where to find OpenSubdiv headers, Set when
+-#                           OPENSUBDIV_INCLUDE_DIR is found.
+-#  OPENSUBDIV_LIBRARIES, libraries to link against to use OpenSubdiv.
++#  OpenSubdiv_INCLUDE_DIRS, where to find OpenSubdiv headers, Set when
++#                           OpenSubdiv_INCLUDE_DIR is found.
++#  OpenSubdiv_LIBRARIES, libraries to link against to use OpenSubdiv.
+ #  OPENSUBDIV_ROOT_DIR, the base directory to search for OpenSubdiv.
+ #                        This can also be an environment variable.
+ #  OPENSUBDIV_FOUND, if false, do not try to use OpenSubdiv.
+@@ -47,7 +47,7 @@ SET(_opensubdiv_SEARCH_DIRS
+     /opt/lib/osd # install_deps.sh
+ )
+ 
+-FIND_PATH(OPENSUBDIV_INCLUDE_DIR
++FIND_PATH(OpenSubdiv_INCLUDE_DIR
+     NAMES
+         opensubdiv/osd/mesh.h
+     HINTS
+@@ -56,9 +56,9 @@ FIND_PATH(OPENSUBDIV_INCLUDE_DIR
+         include
+ )
+ 
+-if(OPENSUBDIV_INCLUDE_DIR AND EXISTS "${OPENSUBDIV_INCLUDE_DIR}/opensubdiv/version.h")
++if(OpenSubdiv_INCLUDE_DIR AND EXISTS "${OpenSubdiv_INCLUDE_DIR}/opensubdiv/version.h")
+     file(STRINGS
+-         ${OPENSUBDIV_INCLUDE_DIR}/opensubdiv/version.h
++         ${OpenSubdiv_INCLUDE_DIR}/opensubdiv/version.h
+          TMP
+          REGEX "#define OPENSUBDIV_VERSION v.*$"
+     )
+@@ -75,7 +75,7 @@ if(OPENSUBDIV_INCLUDE_DIR AND EXISTS "${OPENSUBDIV_INCLUDE_DIR}/opensubdiv/versi
+     )
+ endif()
+ 
+-SET(_opensubdiv_LIBRARIES)
++SET(_OpenSubdiv_LIBRARIES)
+ FOREACH(COMPONENT ${_opensubdiv_FIND_COMPONENTS})
+   STRING(TOUPPER ${COMPONENT} UPPERCOMPONENT)
+   FIND_LIBRARY(OPENSUBDIV_${UPPERCOMPONENT}_LIBRARY
+@@ -88,7 +88,7 @@ FOREACH(COMPONENT ${_opensubdiv_FIND_COMPONENTS})
+     )
+   if(OPENSUBDIV_${UPPERCOMPONENT}_LIBRARY)
+     LIST(APPEND
+-        _opensubdiv_LIBRARIES
++        _OpenSubdiv_LIBRARIES
+         "${OPENSUBDIV_${UPPERCOMPONENT}_LIBRARY}")
+     set(OPENSUBDIV_FOUND TRUE)
+   endif()
+@@ -98,7 +98,7 @@ MACRO(OPENSUBDIV_CHECK_CONTROLLER
+       controller_include_file
+       variable_name)
+   IF(EXISTS
+-    "${OPENSUBDIV_INCLUDE_DIR}/opensubdiv/osd/${controller_include_file}"
++    "${OpenSubdiv_INCLUDE_DIR}/opensubdiv/osd/${controller_include_file}"
+     )
+     SET(${variable_name} TRUE)
+   ELSE()
+@@ -108,8 +108,8 @@ ENDMACRO()
+ 
+ 
+ IF(OPENSUBDIV_FOUND)
+-  SET(OPENSUBDIV_LIBRARIES ${_opensubdiv_LIBRARIES})
+-  SET(OPENSUBDIV_INCLUDE_DIRS ${OPENSUBDIV_INCLUDE_DIR})
++  SET(OpenSubdiv_LIBRARIES ${_OpenSubdiv_LIBRARIES})
++  SET(OpenSubdiv_INCLUDE_DIRS ${OpenSubdiv_INCLUDE_DIR})
+ 
+   # Find available compute controllers that USD may want to use.
+   OPENSUBDIV_CHECK_CONTROLLER("glXFBEvaluator.h" OPENSUBDIV_HAS_GLSL_TRANSFORM_FEEDBACK)
+@@ -117,7 +117,7 @@ IF(OPENSUBDIV_FOUND)
+ ENDIF(OPENSUBDIV_FOUND)
+ 
+ MARK_AS_ADVANCED(
+-  OPENSUBDIV_INCLUDE_DIR
++  OpenSubdiv_INCLUDE_DIR
+ )
+ FOREACH(COMPONENT ${_opensubdiv_FIND_COMPONENTS})
+   STRING(TOUPPER ${COMPONENT} UPPERCOMPONENT)
+@@ -129,8 +129,8 @@ ENDFOREACH()
+ INCLUDE(FindPackageHandleStandardArgs)
+ FIND_PACKAGE_HANDLE_STANDARD_ARGS(OpenSubdiv
+     REQUIRED_VARS
+-        OPENSUBDIV_INCLUDE_DIR
+-        OPENSUBDIV_LIBRARIES
++        OpenSubdiv_INCLUDE_DIR
++        OpenSubdiv_LIBRARIES
+     VERSION_VAR
+         OPENSUBDIV_VERSION
+ )
+diff --git a/pxr/imaging/hdSt/CMakeLists.txt b/pxr/imaging/hdSt/CMakeLists.txt
+index 3fd15e3c2..9f05d0bc5 100644
+--- a/pxr/imaging/hdSt/CMakeLists.txt
++++ b/pxr/imaging/hdSt/CMakeLists.txt
+@@ -33,8 +33,8 @@ if (${PXR_ENABLE_MATERIALX_SUPPORT})
+     endif()
+ endif()
+ if (PXR_ENABLE_PTEX_SUPPORT)
+-    list(APPEND optionalLibs ${PTEX_LIBRARY})
+-    list(APPEND optionalIncludeDirs ${PTEX_INCLUDE_DIR})
++    list(APPEND optionalLibs ${ptex_LIBRARIES})
++    list(APPEND optionalIncludeDirs ${ptex_INCLUDE_DIR})
+     list(APPEND optionalPublicClasses ptexMipmapTextureLoader)
+ endif()
+ 
+@@ -50,11 +50,11 @@ pxr_library(hdSt
+         sdr
+         tf
+         trace
+-        ${OPENSUBDIV_LIBRARIES}
++        ${OpenSubdiv_LIBRARIES}
+         ${optionalLibs}
+ 
+     INCLUDE_DIRS
+-        ${OPENSUBDIV_INCLUDE_DIR}
++        ${OpenSubdiv_INCLUDE_DIR}
+         ${optionalIncludeDirs}
+ 
+     PUBLIC_CLASSES
+diff --git a/pxr/imaging/hdx/CMakeLists.txt b/pxr/imaging/hdx/CMakeLists.txt
+index 29b7aeeeb..3d9537c76 100644
+--- a/pxr/imaging/hdx/CMakeLists.txt
++++ b/pxr/imaging/hdx/CMakeLists.txt
+@@ -11,8 +11,8 @@ endif()
+ 
+ set (optionalCppFiles "")
+ if (PXR_BUILD_OPENCOLORIO_PLUGIN)
+-    list(APPEND optionalLibs ${OCIO_LIBRARIES})
+-    list(APPEND optionalIncludeDirs ${OCIO_INCLUDE_DIRS})
++    list(APPEND optionalLibs ${OpenColorIO_LIBRARIES})
++    list(APPEND optionalIncludeDirs ${OpenColorIO_INCLUDE_DIRS})
+ endif()
+ 
+ pxr_library(hdx
+diff --git a/pxr/imaging/plugin/hdStorm/CMakeLists.txt b/pxr/imaging/plugin/hdStorm/CMakeLists.txt
+index 043f2d363..41d8964bc 100644
+--- a/pxr/imaging/plugin/hdStorm/CMakeLists.txt
++++ b/pxr/imaging/plugin/hdStorm/CMakeLists.txt
+@@ -25,12 +25,12 @@ pxr_plugin(hdStorm
+         work
+         hd
+         hdSt
+-        ${OPENSUBDIV_LIBRARIES}
++        ${OpenSubdiv_LIBRARIES}
+         ${TBB_tbb_LIBRARY}
+ 
+     INCLUDE_DIRS
+         ${TBB_INCLUDE_DIRS}
+-        ${OPENSUBDIV_INCLUDE_DIR}
++        ${OpenSubdiv_INCLUDE_DIR}
+ 
+     PUBLIC_CLASSES
+         rendererPlugin
+diff --git a/pxr/imaging/plugin/hioOiio/CMakeLists.txt b/pxr/imaging/plugin/hioOiio/CMakeLists.txt
+index 0a055b711..9ac744e30 100644
+--- a/pxr/imaging/plugin/hioOiio/CMakeLists.txt
++++ b/pxr/imaging/plugin/hioOiio/CMakeLists.txt
+@@ -22,11 +22,11 @@ pxr_plugin(hioOiio
+         gf
+         hio
+         tf
+-        ${OIIO_LIBRARIES}
++        ${OpenImageIO_LIBRARIES}
+         ${__OIIO_IMATH_LIBS}
+ 
+     INCLUDE_DIRS
+-        ${OIIO_INCLUDE_DIRS}
++        ${OpenImageIO_INCLUDE_DIRS}
+         ${__OIIO_IMATH_INCLUDE}
+ 
+     CPPFILES
+diff --git a/pxr/imaging/pxOsd/CMakeLists.txt b/pxr/imaging/pxOsd/CMakeLists.txt
+index f38ae0f22..61f47c3bf 100644
+--- a/pxr/imaging/pxOsd/CMakeLists.txt
++++ b/pxr/imaging/pxOsd/CMakeLists.txt
+@@ -6,11 +6,11 @@ pxr_library(pxOsd
+         tf
+         gf
+         vt
+-        ${OPENSUBDIV_LIBRARIES}
++        ${OpenSubdiv_LIBRARIES}
+         ${Boost_PYTHON_LIBRARY}
+ 
+     INCLUDE_DIRS
+-        ${OPENSUBDIV_INCLUDE_DIR}
++        ${OpenSubdiv_INCLUDE_DIR}
+         
+     PUBLIC_HEADERS
+         api.h
+diff --git a/pxr/usd/plugin/sdrOsl/CMakeLists.txt b/pxr/usd/plugin/sdrOsl/CMakeLists.txt
+index d37eb8374..341de7042 100644
+--- a/pxr/usd/plugin/sdrOsl/CMakeLists.txt
++++ b/pxr/usd/plugin/sdrOsl/CMakeLists.txt
+@@ -14,12 +14,12 @@ pxr_plugin(sdrOsl
+         ndr
+         sdr
+         ${OSL_QUERY_LIBRARY}
+-        ${OIIO_LIBRARIES}
++        ${OpenImageIO_LIBRARIES}
+ 
+     INCLUDE_DIRS
+         ${OPENEXR_INCLUDE_DIR}
+         ${OSL_INCLUDE_DIR}
+-        ${OIIO_INCLUDE_DIRS}
++        ${OpenImageIO_INCLUDE_DIRS}
+ 
+     PUBLIC_CLASSES
+         oslParser
+diff --git a/pxr/usd/plugin/usdAbc/CMakeLists.txt b/pxr/usd/plugin/usdAbc/CMakeLists.txt
+index 2070acaaf..bbb02b75f 100644
+--- a/pxr/usd/plugin/usdAbc/CMakeLists.txt
++++ b/pxr/usd/plugin/usdAbc/CMakeLists.txt
+@@ -1,7 +1,7 @@
+ set(PXR_PREFIX pxr/usd)
+ set(PXR_PACKAGE usdAbc)
+ 
+-if(NOT ALEMBIC_FOUND)
++if(NOT Alembic_FOUND)
+     message(WARNING "Not building ${PXR_PACKAGE} because of missing dependency: Alembic")
+     return()
+ endif()
+@@ -38,12 +38,12 @@ pxr_plugin(usdAbc
+         sdf
+         usd
+         usdGeom
+-        ${ALEMBIC_LIBRARIES}
++        ${Alembic_LIBRARIES}
+         ${__ALEMBIC_IMATH_LIBS}
+         ${optionalLibs}
+ 
+     INCLUDE_DIRS
+-        ${ALEMBIC_INCLUDE_DIR}
++        ${Alembic_INCLUDE_DIR}
+         ${__ALEMBIC_IMATH_INCLUDES}
+         ${optionalIncludeDirs}
+ 

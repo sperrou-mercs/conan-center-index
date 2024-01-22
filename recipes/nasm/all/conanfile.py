@@ -18,6 +18,7 @@ class NASMConan(ConanFile):
     description = "The Netwide Assembler, NASM, is an 80x86 and x86-64 assembler"
     license = "BSD-2-Clause"
     topics = ("asm", "installer", "assembler",)
+    revision_mode = "scm"
 
     settings = "os", "arch", "compiler", "build_type"
 

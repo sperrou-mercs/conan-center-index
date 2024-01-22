@@ -19,6 +19,7 @@ class MakeConan(ConanFile):
     url = "https://github.com/conan-io/conan-center-index"
     license = "GPL-3.0-or-later"
     settings = "os", "arch", "compiler", "build_type"
+    revision_mode = "scm"
 
     @property
     def _settings_build(self):

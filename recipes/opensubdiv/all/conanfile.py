@@ -16,6 +16,7 @@ class OpenSubdivConan(ConanFile):
     url = "https://github.com/conan-io/conan-center-index"
     description = "An Open-Source subdivision surface library"
     topics = ("cgi", "vfx", "animation", "subdivision surface")
+    revision_mode = "scm"
     package_type = "library"
     settings = "os", "arch", "compiler", "build_type"
     options = {
@@ -33,8 +34,8 @@ class OpenSubdivConan(ConanFile):
     default_options = {
         "shared": False,
         "fPIC": True,
-        "with_tbb": False,
-        "with_opengl": False,
+        "with_tbb": True,
+        "with_opengl": True,
         "with_omp": False,
         "with_cuda": False,
         "with_clew": False,
@@ -84,7 +85,7 @@ class OpenSubdivConan(ConanFile):
             # OpenSubdiv < 3.6.0 support only onettbb/2020.x.x
             # https://github.com/PixarAnimationStudios/OpenSubdiv/pull/1317
             if Version(self.version) < "3.6.0":
-                self.requires("onetbb/2020.3.3", transitive_headers=True)
+                self.requires("tbb/2020.2", transitive_headers=True)
             else:
                 self.requires("onetbb/2021.10.0", transitive_headers=True)
 
@@ -97,8 +98,8 @@ class OpenSubdivConan(ConanFile):
                 f"{self.ref} requires C++{self._min_cppstd}, which your compiler does not support."
             )
 
-        if self.options.shared and self.settings.os == "Windows":
-            raise ConanInvalidConfiguration(f"{self.ref} shared not supported on Windows")
+        # if self.options.shared and self.settings.os == "Windows":
+        #     raise ConanInvalidConfiguration(f"{self.ref} shared not supported on Windows")
 
     def source(self):
         get(self, **self.conan_data["sources"][self.version], strip_root=True)
@@ -167,7 +168,10 @@ class OpenSubdivConan(ConanFile):
         self.cpp_info.components["osdcpu"].set_property("cmake_target_name", f"OpenSubdiv::osdcpu{target_suffix}")
         self.cpp_info.components["osdcpu"].libs = ["osdCPU"]
         if self.options.with_tbb:
-            self.cpp_info.components["osdcpu"].requires = ["onetbb::onetbb"]
+            if Version(self.version) < "3.6.0":
+                self.cpp_info.components["osdcpu"].requires = ["tbb::libtbb"]
+            else:
+                self.cpp_info.components["osdcpu"].requires = ["onetbb::onetbb"]
 
         if self._osd_gpu_enabled:
             self.cpp_info.components["osdgpu"].set_property("cmake_target_name", f"OpenSubdiv::osdgpu{target_suffix}")

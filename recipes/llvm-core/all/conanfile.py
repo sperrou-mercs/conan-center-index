@@ -24,6 +24,7 @@ class LLVMCoreConan(ConanFile):
     topics = ('llvm', 'compiler')
     homepage = 'https://llvm.org'
     url = 'https://github.com/conan-io/conan-center-index'
+    revision_mode = "scm"
 
     settings = ('os', 'arch', 'compiler', 'build_type')
     options = {
@@ -77,7 +78,7 @@ class LLVMCoreConan(ConanFile):
     # Older cmake versions may have issues generating the graphviz output used
     # to model the components
     build_requires = [
-        'cmake/3.20.5'
+        'cmake/[>=3.18 <4]'
     ]
 
     generators = 'cmake', 'cmake_find_package'
@@ -202,7 +203,7 @@ class LLVMCoreConan(ConanFile):
         if self.options.with_ffi:
             self.requires('libffi/3.3')
         if self.options.get_safe('with_zlib', False):
-            self.requires('zlib/1.2.12')
+            self.requires('zlib/[>=1.2.11 <2]')
         if self.options.get_safe('with_xml2', False):
             self.requires('libxml2/2.9.10')
 

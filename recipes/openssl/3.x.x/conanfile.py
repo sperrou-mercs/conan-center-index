@@ -21,6 +21,7 @@ class OpenSSLConan(ConanFile):
     license = "Apache-2.0"
     topics = ("ssl", "tls", "encryption", "security")
     description = "A toolkit for the Transport Layer Security (TLS) and Secure Sockets Layer (SSL) protocols"
+    revision_mode = "scm"
     package_type = "library"
     settings = "os", "arch", "compiler", "build_type"
     options = {

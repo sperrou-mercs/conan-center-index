@@ -1,0 +1,159 @@
+diff --git a/sources/cmake_helpers/helpers.cmake b/sources/cmake_helpers/helpers.cmake
+index fed96b5..70b9e5e 100644
+--- a/sources/cmake_helpers/helpers.cmake
++++ b/sources/cmake_helpers/helpers.cmake
+@@ -141,34 +141,38 @@ macro(COLLECT_MODULE_IF_FOUND shortname)
+         set(quiet_argument "QUIET")
+     endif()
+ 
+-    find_package(${_qt_module_name} ${quiet_argument})
+-    # If package is found, _name_found will be equal to 1
+-    set(_name_found "${_qt_module_name}_FOUND")
+-    # _name_dir will keep the path to the directory where the CMake rules were found
+-    # e.g: ~/qt5.9-install/qtbase/lib/cmake/Qt5Core or /usr/lib64/cmake/Qt5Core
+-    set(_name_dir "${_qt_module_name}_DIR")
+-    # Qt5Core will set the base path to check if all the modules are on the same
+-    # directory, to avoid CMake looking in another path.
+-    # This will be saved in a global variable at the beginning of the modules
+-    # collection process.
+-    string(FIND "${name}" "Qt${QT_MAJOR_VERSION}Core" qtcore_found)
+-    if(("${qtcore_found}" GREATER "0") OR ("${qtcore_found}" EQUAL "0"))
+-        get_filename_component(_core_abs_dir "${${_name_dir}}/../" ABSOLUTE)
+-        # Setting the absolute path where the Qt5Core was found
+-        # e.g: ~/qt5.9-install/qtbase/lib/cmake or /usr/lib64/cmake
+-        message(STATUS "CORE_ABS_DIR:" ${_core_abs_dir})
++    if (Qt5::${shortname})
++        set(_name_found 1)
+     endif()
+ 
+-    # Getting the absolute path for each module where the CMake was found, to
+-    # compare it with CORE_ABS_DIR and check if they are in the same source directory
+-    # e.g: ~/qt5.9-install/qtbase/lib/cmake/Qt5Script or /usr/lib64/cmake/Qt5Script
+-    get_filename_component(_module_dir "${${_name_dir}}" ABSOLUTE)
+-    string(FIND "${_module_dir}" "${_core_abs_dir}" found_basepath)
++    # find_package(${_qt_module_name} ${quiet_argument})
++    # # If package is found, _name_found will be equal to 1
++    # set(_name_found "${_qt_module_name}_FOUND")
++    # # _name_dir will keep the path to the directory where the CMake rules were found
++    # # e.g: ~/qt5.9-install/qtbase/lib/cmake/Qt5Core or /usr/lib64/cmake/Qt5Core
++    # set(_name_dir "${_qt_module_name}_DIR")
++    # # Qt5Core will set the base path to check if all the modules are on the same
++    # # directory, to avoid CMake looking in another path.
++    # # This will be saved in a global variable at the beginning of the modules
++    # # collection process.
++    # string(FIND "${name}" "Qt${QT_MAJOR_VERSION}Core" qtcore_found)
++    # if(("${qtcore_found}" GREATER "0") OR ("${qtcore_found}" EQUAL "0"))
++    #     get_filename_component(_core_abs_dir "${${_name_dir}}/../" ABSOLUTE)
++    #     # Setting the absolute path where the Qt5Core was found
++    #     # e.g: ~/qt5.9-install/qtbase/lib/cmake or /usr/lib64/cmake
++    #     message(STATUS "CORE_ABS_DIR:" ${_core_abs_dir})
++    # endif()
++
++    # # Getting the absolute path for each module where the CMake was found, to
++    # # compare it with CORE_ABS_DIR and check if they are in the same source directory
++    # # e.g: ~/qt5.9-install/qtbase/lib/cmake/Qt5Script or /usr/lib64/cmake/Qt5Script
++    # get_filename_component(_module_dir "${${_name_dir}}" ABSOLUTE)
++    # string(FIND "${_module_dir}" "${_core_abs_dir}" found_basepath)
+ 
+     # If the module was found, and also the module path is the same as the
+     # Qt5Core base path, we will generate the list with the modules to be installed
+     set(looked_in_message ". Looked in: ${${_name_dir}}")
+-    if("${${_name_found}}" AND (("${found_basepath}" GREATER "0") OR ("${found_basepath}" EQUAL "0")))
++    if("${${_name_found}}")
+         message(STATUS "${module_state} module ${name} found (${ARGN})${looked_in_message}")
+         # record the shortnames for the tests
+         list(APPEND all_module_shortnames ${shortname})
+diff --git a/sources/pyside2-tools/pylupdate/CMakeLists.txt b/sources/pyside2-tools/pylupdate/CMakeLists.txt
+index a46608c..42d2c60 100644
+--- a/sources/pyside2-tools/pylupdate/CMakeLists.txt
++++ b/sources/pyside2-tools/pylupdate/CMakeLists.txt
+@@ -11,28 +11,19 @@ simtexth.cpp
+ translator.cpp
+ )
+ 
+-find_package(Qt5Core)
+-find_package(Qt5Gui)
+-find_package(Qt5Xml)
+-find_package(Qt5Widgets)
++find_package(Qt5 REQUIRED COMPONENTS Core Gui Xml Widgets)
+ 
+ set(lupdate_MOC_HEADERS translator.h)
+ qt5_wrap_cpp(lupdate_MOC_OUTFILES ${lupdate_MOC_HEADERS})
+ 
+ add_executable(pyside2-lupdate ${lupdate_SRC} ${lupdate_MOC_OUTFILES})
+-include_directories(pyside2-lupdate
+-                    ${CMAKE_CURRENT_SOURCE_DIR}
+-                    ${Qt5Xml_INCLUDE_DIRS}
+-                    ${Qt5Core_INCLUDE_DIRS}
+-                    ${Qt5Gui_INCLUDE_DIRS}
+-                    ${Qt5Widgets_INCLUDE_DIRS}
+-                    )
++include_directories(pyside2-lupdate ${CMAKE_CURRENT_SOURCE_DIR})
+ 
+ target_link_libraries(pyside2-lupdate
+-                      ${Qt5Core_LIBRARIES}
+-                      ${Qt5Xml_LIBRARIES}
+-                      ${Qt5Gui_LIBRARIES}
+-                      ${Qt5Widgets_LIBRARIES}
++                      Qt5::Core
++                      Qt5::Xml
++                      Qt5::Gui
++                      Qt5::Widgets
+                       )
+ 
+ install(TARGETS pyside2-lupdate RUNTIME DESTINATION bin)
+diff --git a/sources/pyside2/CMakeLists.txt b/sources/pyside2/CMakeLists.txt
+index 4336d6c..ebcbfa8 100644
+--- a/sources/pyside2/CMakeLists.txt
++++ b/sources/pyside2/CMakeLists.txt
+@@ -84,7 +84,6 @@ add_definitions(${Qt${QT_MAJOR_VERSION}Core_DEFINITIONS})
+ 
+ find_file(GL_H "gl.h" PATH_SUFFIXES "GL")
+ message(STATUS "GL Headers path:" "${GL_H}")
+-include(FindQt5Extra)
+ 
+ set(XVFB_EXEC "")
+ option(USE_XVFB "Uses xvfb-run with the unit tests to avoid QtGui tests popping windows on the screen." FALSE)
+@@ -169,6 +168,8 @@ set (Qt${QT_MAJOR_VERSION}Widgets_FOUND "0")
+ collect_essential_modules()
+ collect_optional_modules()
+ 
++find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets PrintSupport Sql Network Test Concurrent Xml XmlPatterns Help Multimedia MultimediaWidgets OpenGL OpenGLFunctions Positioning Location Qml Quick QuickControls2 QuickWidgets RemoteObjects Scxml Script ScriptTools Sensors SerialPort TextToSpeech Charts Svg DataVisualization)
++
+ # Modules to be built unless specified by -DMODULES on command line
+ if (NOT MODULES)
+     set(MODULES "${ALL_ESSENTIAL_MODULES};${ALL_OPTIONAL_MODULES}")
+@@ -186,12 +187,15 @@ foreach(m ${DISABLED_MODULES})
+ endforeach()
+ 
+ 
+-string(REGEX MATCHALL "[0-9]+" qt_version_helper "${Qt${QT_MAJOR_VERSION}Core_VERSION}")
++# string(REGEX MATCHALL "[0-9]+" qt_version_helper "${Qt${QT_MAJOR_VERSION}Core_VERSION}")
+ 
+-list(GET qt_version_helper 0 QT_VERSION_MAJOR)
+-list(GET qt_version_helper 1 QT_VERSION_MINOR)
+-list(GET qt_version_helper 2 QT_VERSION_PATCH)
+-unset(qt_version_helper)
++# list(GET qt_version_helper 0 QT_VERSION_MAJOR)
++# list(GET qt_version_helper 1 QT_VERSION_MINOR)
++# list(GET qt_version_helper 2 QT_VERSION_PATCH)
++# unset(qt_version_helper)
++set(QT_VERSION_MAJOR 5)
++set(QT_VERSION_MINOR 15)
++set(QT_VERSION_PATCH 12)
+ 
+ set(PYSIDE_QT_VERSION "${QT_VERSION_MAJOR}.${QT_VERSION_MINOR}" CACHE STRING "Qt version used to compile PySide" FORCE)
+ if(ENABLE_VERSION_SUFFIX)
+diff --git a/sources/shiboken2/CMakeLists.txt b/sources/shiboken2/CMakeLists.txt
+index c654602..2338de7 100644
+--- a/sources/shiboken2/CMakeLists.txt
++++ b/sources/shiboken2/CMakeLists.txt
+@@ -243,7 +243,7 @@ add_subdirectory(libshiboken)
+ add_subdirectory(doc)
+ 
+ # deps found, compile the generator.
+-if (Qt${QT_MAJOR_VERSION}Core_FOUND AND PYTHONINTERP_FOUND)
++if (Qt${QT_MAJOR_VERSION}_FOUND AND PYTHONINTERP_FOUND)
+     add_subdirectory(generator)
+     add_subdirectory(shibokenmodule)
+ 

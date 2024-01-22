@@ -14,6 +14,7 @@ class GetoptForVisualStudioConan(ConanFile):
     topics = ("getopt", "cli", "command line", "options")
     url = "https://github.com/conan-io/conan-center-index"
     homepage = "https://github.com/skandhurkat/Getopt-for-Visual-Studio"
+    revision_mode = "scm"
     license = "MIT", "BSD-2-Clause"
     package_type = "header-library"
     settings = "os", "arch", "compiler", "build_type"

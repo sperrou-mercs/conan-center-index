@@ -16,6 +16,7 @@ class MesonConan(ConanFile):
     topics = ("meson", "mesonbuild", "build-system")
     url = "https://github.com/conan-io/conan-center-index"
     homepage = "https://github.com/mesonbuild/meson"
+    revision_mode = "scm"
     license = "Apache-2.0"
     no_copy_source = True
 

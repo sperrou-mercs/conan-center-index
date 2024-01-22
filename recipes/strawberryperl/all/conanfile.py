@@ -15,6 +15,7 @@ class StrawberryPerlConan(ConanFile):
     url = "https://github.com/conan-io/conan-center-index"
     topics = ("perl", "interpreter", "windows")
     settings = "os", "arch", "compiler", "build_type"
+    revision_mode = "scm"
 
     def layout(self):
         self.folders.build = "build"

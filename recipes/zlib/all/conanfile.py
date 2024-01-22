@@ -16,6 +16,7 @@ class ZlibConan(ConanFile):
     description = ("A Massively Spiffy Yet Delicately Unobtrusive Compression Library "
                    "(Also Free, Not to Mention Unencumbered by Patents)")
     topics = ("zlib", "compression")
+    revision_mode = "scm"
 
     settings = "os", "arch", "compiler", "build_type"
     options = {

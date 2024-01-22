@@ -3,6 +3,7 @@ from conan.tools.cmake import CMake, CMakeToolchain
 from conan.tools.layout import basic_layout
 from conan.tools.files import get, copy, replace_in_file, rm, rmdir
 from conan.tools.scm import Version
+from conan.tools.env import VirtualBuildEnv
 import os
 
 
@@ -16,20 +17,28 @@ class PyBind11Conan(ConanFile):
     homepage = "https://github.com/pybind/pybind11"
     license = "BSD-3-Clause"
     url = "https://github.com/conan-io/conan-center-index"
+    revision_mode = "scm"
     settings = "os", "arch", "compiler", "build_type"
     no_copy_source = True
 
     def layout(self):
         basic_layout(self, src_folder="src")
 
+    def requirements(self):
+        self.requires("cpython/[>=3.7]")
+
     def source(self):
         get(self, **self.conan_data["sources"][self.version], destination=self.source_folder, strip_root=True)
 
     def generate(self):
+        env = VirtualBuildEnv(self)
+        env.generate()
         tc = CMakeToolchain(self)
         tc.variables["PYBIND11_INSTALL"] = True
         tc.variables["PYBIND11_TEST"] = False
         tc.variables["PYBIND11_CMAKECONFIG_INSTALL_DIR"] = "lib/cmake/pybind11"
+        exefilename = "python.exe" if self.settings.os == "Windows" else "python"
+        tc.variables["PYTHON_EXECUTABLE"] = os.path.join(self.deps_cpp_info["cpython"].bin_paths[0], exefilename).replace('\\', '/')
         tc.generate()
 
     def build(self):

@@ -17,6 +17,7 @@ class Catch2Conan(ConanFile):
     license = "BSL-1.0"
     homepage = "https://github.com/catchorg/Catch2"
     url = "https://github.com/conan-io/conan-center-index"
+    revision_mode = "scm"
     package_type = "library"
     settings = "os", "arch", "compiler", "build_type"
     options = {

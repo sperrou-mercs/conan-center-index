@@ -16,6 +16,7 @@ class PugiXmlConan(ConanFile):
     url = "https://github.com/conan-io/conan-center-index"
     homepage = "https://pugixml.org/"
     package_type = "library"
+    revision_mode = "scm"
 
     settings = "os", "arch", "compiler", "build_type"
     options = {

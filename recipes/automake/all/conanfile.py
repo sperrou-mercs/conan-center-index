@@ -20,6 +20,7 @@ class AutomakeConan(ConanFile):
     url = "https://github.com/conan-io/conan-center-index"
     homepage = "https://www.gnu.org/software/automake/"
     topics = ("autotools", "configure", "build")
+    revision_mode = "scm"
 
     package_type = "application"
     settings = "os", "arch", "compiler", "build_type"

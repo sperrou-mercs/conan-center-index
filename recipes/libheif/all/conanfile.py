@@ -14,6 +14,7 @@ class LibheifConan(ConanFile):
     url = "https://github.com/conan-io/conan-center-index"
     homepage = "https://github.com/strukturag/libheif"
     license = ("LGPL-3.0-only", "GPL-3.0-or-later", "MIT")
+    revision_mode = "scm"
 
     package_type = "library"
     settings = "os", "arch", "compiler", "build_type"

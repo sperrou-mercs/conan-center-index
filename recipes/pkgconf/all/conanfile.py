@@ -19,6 +19,7 @@ class PkgConfConan(ConanFile):
     homepage = "https://git.sr.ht/~kaniini/pkgconf"
     license = "ISC"
     description = "package compiler and linker metadata toolkit"
+    revision_mode = "scm"
     settings = "os", "arch", "compiler", "build_type"
     options = {
         "shared": [True, False],
@@ -56,7 +57,7 @@ class PkgConfConan(ConanFile):
             del self.info.settings.compiler
 
     def build_requirements(self):
-        self.tool_requires("meson/1.2.2")
+        self.tool_requires("meson/[~1.2.2]")
 
     def source(self):
         get(self, **self.conan_data["sources"][self.version], strip_root=True)
